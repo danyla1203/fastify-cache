@@ -32,7 +32,10 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
       req: FastifyRequest<{ Querystring: IQuerystring }>,
       reply: FastifyReply,
     ) => {
+      const cache = await fastify.redis.hgetall(req.query.id.toString());
+      if (cache) return cache;
       const record = await em.findOne(Resource, req.query.id);
+      await fastify.redis.hmset(record.id.toString(), record);
       return record || reply.code(404).send('Not found');
     },
   });
@@ -55,6 +58,7 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
     handler: async ({ body }: FastifyRequest<{ Body: InsertResourceDto }>) => {
       const resource = new Resource(body);
       await em.persist(resource).flush();
+      await fastify.redis.hmset(resource.id.toString(), resource);
       return resource;
     },
   });
