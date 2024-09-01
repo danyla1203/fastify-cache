@@ -28,8 +28,12 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
         required: ['id'],
       },
     },
-    handler: async (req: FastifyRequest<{ Querystring: IQuerystring }>) => {
-      return em.findOne(Resource, req.query.id);
+    handler: async (
+      req: FastifyRequest<{ Querystring: IQuerystring }>,
+      reply: FastifyReply,
+    ) => {
+      const record = await em.findOne(Resource, req.query.id);
+      return record || reply.code(404).send('Not found');
     },
   });
 
