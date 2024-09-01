@@ -1,0 +1,30 @@
+{
+  "name": "fastify-cache-approaches",
+  "version": "1.0.0",
+  "description": "",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc -p tsconfig.json --skipLibCheck",
+    "build:watch": "tsc -p tsconfig.json -w",
+    "start:watch": "nodemon start ./dist/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "fastify": "^4.28.1",
+    "fastify-cli": "^6.3.0",
+    "redis": "^4.7.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.4",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.52.0",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "nodemon": "^3.1.4",
+    "prettier": "^2.3.2",
+    "typescript": "^5.5.4"
+  }
+}
