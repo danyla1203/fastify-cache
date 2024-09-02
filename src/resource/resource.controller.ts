@@ -1,6 +1,8 @@
 import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import fastifyPlugin from 'fastify-plugin';
 import { Resource } from './resource.entity.js';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
+import { resourceService } from './resource.service.js';
 
 interface IQuerystring {
   id: number;
@@ -16,6 +18,8 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify: FastifyInstance,
 ) => {
   const em = fastify.orm.em;
+  await fastify.register(fastifyPlugin(resourceService));
+
   fastify.route({
     url: '/',
     method: 'GET',
@@ -28,15 +32,8 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
         required: ['id'],
       },
     },
-    handler: async (
-      req: FastifyRequest<{ Querystring: IQuerystring }>,
-      reply: FastifyReply,
-    ) => {
-      const cache = await fastify.redis.hgetall(req.query.id.toString());
-      if (cache) return cache;
-      const record = await em.findOne(Resource, req.query.id);
-      await fastify.redis.hmset(record.id.toString(), record);
-      return record || reply.code(404).send('Not found');
+    handler: async (req: FastifyRequest<{ Querystring: IQuerystring }>) => {
+      return fastify.service.getItem(req.query.id);
     },
   });
 
