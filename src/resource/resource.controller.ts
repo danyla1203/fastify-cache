@@ -1,6 +1,5 @@
-import { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { FastifyInstance, FastifyRequest } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
-import { Resource } from './resource.entity.js';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { resourceService } from './resource.service.js';
 
@@ -17,7 +16,6 @@ export interface InsertResourceDto {
 export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify: FastifyInstance,
 ) => {
-  const em = fastify.orm.em;
   await fastify.register(fastifyPlugin(resourceService));
 
   fastify.route({
@@ -53,10 +51,7 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     handler: async ({ body }: FastifyRequest<{ Body: InsertResourceDto }>) => {
-      const resource = new Resource(body);
-      await em.persist(resource).flush();
-      await fastify.redis.hmset(resource.id.toString(), resource);
-      return resource;
+      return fastify.service.addItem(body);
     },
   });
 
@@ -64,7 +59,7 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
     url: '/all',
     method: 'GET',
     handler: async () => {
-      return em.findAll(Resource);
+      return fastify.service.getAll();
     },
   });
 
@@ -80,14 +75,10 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
         required: ['id'],
       },
     },
-    handler: async (
-      { query }: FastifyRequest<{ Querystring: IQuerystring }>,
-      reply: FastifyReply,
-    ) => {
-      const toDelete = await em.findOne(Resource, query.id);
-      return !toDelete
-        ? reply.code(404).send('Resource not found')
-        : em.removeAndFlush(toDelete);
+    handler: async ({
+      query,
+    }: FastifyRequest<{ Querystring: IQuerystring }>) => {
+      return fastify.service.deleteItem(query.id);
     },
   });
 
@@ -112,27 +103,14 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
         },
       },
     },
-    handler: async (
-      {
-        body,
-        query,
-      }: FastifyRequest<{
-        Body: Partial<InsertResourceDto>;
-        Querystring: IQuerystring;
-      }>,
-      reply: FastifyReply,
-    ) => {
-      const toUpdate = await em.findOne(Resource, query.id);
-      if (!toUpdate) {
-        reply.code(404).send('Resource not found');
-        return null;
-      }
-      toUpdate.name = body.name || toUpdate.name;
-      toUpdate.price = body.price || toUpdate.price;
-      toUpdate.description = body.description || toUpdate.description;
-      toUpdate.text = body.text || toUpdate.text;
-      await em.flush();
-      return toUpdate;
+    handler: async ({
+      body,
+      query,
+    }: FastifyRequest<{
+      Body: Partial<InsertResourceDto>;
+      Querystring: IQuerystring;
+    }>) => {
+      return fastify.service.updateItem(query.id, body);
     },
   });
 };
