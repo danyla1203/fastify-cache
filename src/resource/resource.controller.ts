@@ -2,6 +2,24 @@ import { FastifyInstance, FastifyRequest } from 'fastify';
 import fastifyPlugin from 'fastify-plugin';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
 import { resourceService } from './resource.service.js';
+import { Resource } from './resource.entity.js';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    service: ResourceServiceI;
+  }
+}
+
+interface ResourceServiceI {
+  getItem: (id: number) => Promise<Resource>;
+  getAll: () => Promise<Resource[]>;
+  addItem: (input: InsertResourceDto) => Promise<Resource>;
+  deleteItem: (id: number) => Promise<Resource>;
+  updateItem: (
+    id: number,
+    input: Partial<InsertResourceDto>,
+  ) => Promise<Resource>;
+}
 
 interface IQuerystring {
   id: number;

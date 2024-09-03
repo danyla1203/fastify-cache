@@ -1,24 +1,25 @@
 import { Resource } from './resource.entity.js';
 import { InsertResourceDto } from './resource.controller.js';
+import fp from 'fastify-plugin';
 import { FastifyInstance } from 'fastify';
 
-export const resourceDao = async (scope: FastifyInstance) => {
+export async function resourceDao(scope: FastifyInstance) {
   const em = scope.orm.em;
-  const redis = scope.redis;
+  const cache = scope.cache;
 
   const getItemById = async (id: number): Promise<Resource> => {
-    const cache = await redis.hgetall(id.toString());
-    if (cache && Object.keys(cache).length > 0) return cache;
+    const cacheItem = await cache.getItem<Resource>(id.toString());
+    if (cache && Object.keys(cache).length > 0) return cacheItem;
     const record = await em.findOne(Resource, id);
     if (!record) return null;
-    await redis.hmset(record.id.toString(), record);
+    await cache.setItem(record.id.toString(), record);
     return record;
   };
 
   const insertItem = async (input: InsertResourceDto): Promise<Resource> => {
     const resource = new Resource(input);
     await em.persist(resource).flush();
-    await scope.redis.hmset(resource.id.toString(), resource);
+    await cache.setItem(resource.id.toString(), resource);
     return resource;
   };
 
@@ -40,6 +41,7 @@ export const resourceDao = async (scope: FastifyInstance) => {
   const deleteItem = async (id: number) => {
     const toDelete = await em.findOne(Resource, id);
     if (!toDelete) return null;
+    await cache.deleteItem(toDelete.id.toString());
     await em.removeAndFlush(toDelete);
     return toDelete;
   };
@@ -51,4 +53,6 @@ export const resourceDao = async (scope: FastifyInstance) => {
     updateItem,
     deleteItem,
   });
-};
+}
+
+export default fp(resourceDao);

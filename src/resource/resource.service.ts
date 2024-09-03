@@ -1,10 +1,27 @@
 import { FastifyInstance } from 'fastify';
-import fp from 'fastify-plugin';
-import { resourceDao } from './resource.dao.js';
+import resourceDao from './resource.dao.js';
 import { InsertResourceDto } from './resource.controller.js';
+import { Resource } from './resource.entity.js';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    dao: ResourceDaoI;
+  }
+}
+
+interface ResourceDaoI {
+  getItemById: (id: number) => Promise<Resource>;
+  getAllResources: () => Promise<Resource[]>;
+  insertItem: (input: InsertResourceDto) => Promise<Resource>;
+  deleteItem: (id: number) => Promise<Resource>;
+  updateItem: (
+    id: number,
+    input: Partial<InsertResourceDto>,
+  ) => Promise<Resource>;
+}
 
 export const resourceService = async (scope: FastifyInstance) => {
-  await scope.register(fp(resourceDao));
+  await scope.register(resourceDao);
 
   const getItem = async (id: number) => {
     const item = await scope.dao.getItemById(id);
