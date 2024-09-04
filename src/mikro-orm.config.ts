@@ -1,11 +1,12 @@
-import { Options, SqliteDriver } from '@mikro-orm/sqlite';
+import { Options, PostgreSqlDriver } from '@mikro-orm/postgresql';
 import { TsMorphMetadataProvider } from '@mikro-orm/reflection';
 
 const config: Options = {
-  driver: SqliteDriver,
-  dbName: 'sqlite.db',
+  driver: PostgreSqlDriver,
+  dbName: 'fastify-test',
   entities: ['dist/**/*.entity.js'],
   entitiesTs: ['src/**/*.entity.ts'],
+  password: 'root',
   metadataProvider: TsMorphMetadataProvider,
   debug: true,
 };

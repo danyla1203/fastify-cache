@@ -77,7 +77,9 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
     url: '/all',
     method: 'GET',
     handler: async () => {
-      return fastify.service.getAll();
+      const resources = await fastify.service.getAll();
+      fastify.cache.set('resources', resources, 10000, () => {});
+      return resources;
     },
   });
 

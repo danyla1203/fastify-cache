@@ -1,5 +1,5 @@
 import fp from 'fastify-plugin';
-import { MikroORM, RequestContext } from '@mikro-orm/core';
+import { MikroORM, RequestContext } from '@mikro-orm/postgresql';
 import mikroOrmConfig from '../mikro-orm.config.js';
 import { FastifyInstance } from 'fastify';
 
