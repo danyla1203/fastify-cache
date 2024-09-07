@@ -8,7 +8,7 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc -p tsconfig.json --skipLibCheck",
     "build:watch": "tsc -p tsconfig.json -w",
-    "start:watch": "nodemon start ./dist/index.js"
+    "start:watch": "node --watch ./dist/index.js"
   },
   "author": "",
   "license": "ISC",
@@ -33,7 +33,6 @@
     "eslint": "^8.52.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
-    "nodemon": "^3.1.4",
     "prettier": "^2.3.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.5.4",
