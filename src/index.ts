@@ -6,6 +6,7 @@ import FastifyCache from '@fastify/caching';
 import mikroOrmPlugin from './plugin/mikroorm.js';
 import { resourceController } from './resource/index.js';
 import { MikroORM } from '@mikro-orm/core';
+import { ApplicationError } from './ApplicationError.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -23,6 +24,16 @@ const abcache = Abcache({
 });
 
 const server: FastifyInstance = fastify({ logger: true });
+
+server.setErrorHandler((err, _, reply) => {
+  if (err instanceof ApplicationError) {
+    reply
+      .code(err.code)
+      .send({ code: err.code, message: err.message } as never);
+  } else {
+    reply.code(500).send({ message: 'Something went wrong' });
+  }
+});
 
 server
   .register(FastifyRedis, { client: redis })

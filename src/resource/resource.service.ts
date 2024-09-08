@@ -2,6 +2,7 @@ import { FastifyInstance } from 'fastify';
 import resourceDao from './resource.dao.js';
 import { InsertResourceDto } from './resource.controller.js';
 import { Resource } from './resource.entity.js';
+import { ResourceNotFound } from './errors.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -25,8 +26,7 @@ export const resourceService = async (scope: FastifyInstance) => {
 
   const getItem = async (id: number) => {
     const item = await scope.dao.getItemById(id);
-    //TODO: Client errors
-    if (!item) throw new Error('Not found');
+    if (!item) throw new ResourceNotFound();
     return item;
   };
 
@@ -40,11 +40,13 @@ export const resourceService = async (scope: FastifyInstance) => {
 
   const updateItem = async (id: number, input: Partial<InsertResourceDto>) => {
     const updatedOne = await scope.dao.updateItem(id, input);
-    if (!updatedOne) throw new Error('Not found');
+    if (!updatedOne) throw new ResourceNotFound();
     return updatedOne;
   };
   const deleteItem = async (id: number) => {
-    return scope.dao.deleteItem(id);
+    const item = await scope.dao.deleteItem(id);
+    if (!item) throw new ResourceNotFound();
+    return item;
   };
 
   scope.decorate('service', {
