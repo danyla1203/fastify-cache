@@ -48,8 +48,16 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
         required: ['id'],
       },
     },
-    handler: async (req: FastifyRequest<{ Querystring: IQuerystring }>) => {
-      return fastify.service.getItem(req.query.id);
+    handler: async ({
+      query,
+    }: FastifyRequest<{ Querystring: IQuerystring }>) => {
+      const cacheKey = `resource:${query.id}`;
+      const cache = await fastify.cache.get(cacheKey);
+      if (cache) return cache.item;
+    
+      const item = await fastify.service.getItem(query.id);
+      await fastify.cache.set(cacheKey, item, 10000);
+      return item;
     },
   });
 
@@ -69,7 +77,9 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     handler: async ({ body }: FastifyRequest<{ Body: InsertResourceDto }>) => {
-      return fastify.service.addItem(body);
+      const resource = await fastify.service.addItem(body);
+      await fastify.cache.set(`resource:${resource.id.toString()}`, resource, 10000);
+      return resource;
     },
   });
 
@@ -78,7 +88,7 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
     method: 'GET',
     handler: async () => {
       const resources = await fastify.service.getAll();
-      fastify.cache.set('resources', resources, 10000, () => {});
+      await fastify.cache.set(`resource:resources`, resources, 10000, () => {});
       return resources;
     },
   });
