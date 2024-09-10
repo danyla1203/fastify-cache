@@ -1,0 +1,19 @@
+{
+  "name": "resource",
+  "version": "1.0.0",
+  "description": "",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "watch": "node --watch ./src/index.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@grpc/grpc-js": "^1.11.2",
+    "@grpc/proto-loader": "^0.7.13",
+    "knex": "^3.1.0",
+    "pg": "^8.12.0"
+  }
+}

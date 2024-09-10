@@ -1,5 +1,4 @@
-import { ApplicationError } from "../ApplicationError.js";
-
+import { ApplicationError } from "./ApplicationError.js";
 
 export class ResourceNotFound extends ApplicationError {
   constructor() {

@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package resource;
+
+service Resource {
+  rpc GetById(ResourceId) returns (ResourceItem);
+  rpc GetAllResource(VoidParam) returns (ResourceArray);
+  rpc InsertResource(CreateResourceBody) returns (ResourceItem);
+  rpc UpdateResource(UpdateResourceBody) returns (ResourceItem);
+  rpc DeleteResource(ResourceId) returns (SuccessfullDeleted);
+}
+
+message VoidParam {}
+message ResourceId {
+  int32 id = 1;
+}
+message CreateResourceBody {
+  string name = 1;
+  string description = 2;
+  int32 price = 3;
+  string text = 4;
+}
+message UpdateResourceBody {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  int32 price = 4;
+  string text = 5; 
+}
+message ResourceItem {
+  int32 id = 1;
+  string name = 2;
+  string description = 3;
+  int32 price = 4;
+  string createdAt = 5;
+  string text = 6;
+  int32 viewCount = 7;
+}
+message ResourceArray {
+  repeated ResourceItem items = 1;
+}
+message SuccessfullDeleted {
+  string message = 1;
+  bool deleted = 2;
+}

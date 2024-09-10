@@ -1,25 +1,5 @@
 import { FastifyInstance, FastifyRequest } from 'fastify';
-import fastifyPlugin from 'fastify-plugin';
 import { FastifyPluginAsyncJsonSchemaToTs } from '@fastify/type-provider-json-schema-to-ts';
-import { resourceService } from './resource.service.js';
-import { Resource } from './resource.entity.js';
-
-declare module 'fastify' {
-  interface FastifyInstance {
-    service: ResourceServiceI;
-  }
-}
-
-interface ResourceServiceI {
-  getItem: (id: number) => Promise<Resource>;
-  getAll: () => Promise<Resource[]>;
-  addItem: (input: InsertResourceDto) => Promise<Resource>;
-  deleteItem: (id: number) => Promise<Resource>;
-  updateItem: (
-    id: number,
-    input: Partial<InsertResourceDto>,
-  ) => Promise<Resource>;
-}
 
 interface IQuerystring {
   id: number;
@@ -34,8 +14,6 @@ export interface InsertResourceDto {
 export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
   fastify: FastifyInstance,
 ) => {
-  await fastify.register(fastifyPlugin(resourceService));
-
   fastify.route({
     url: '/',
     method: 'GET',
@@ -54,10 +32,11 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
       const cacheKey = `resource:${query.id}`;
       const cache = await fastify.cache.get(cacheKey);
       if (cache) return cache.item;
-    
-      const item = await fastify.service.getItem(query.id);
-      await fastify.cache.set(cacheKey, item, 10000);
-      return item;
+
+      const result = await fastify.rpc.getById({ id: query.id });
+      await fastify.cache.set(cacheKey, result, 10000);
+
+      return result;
     },
   });
 
@@ -77,9 +56,13 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
       },
     },
     handler: async ({ body }: FastifyRequest<{ Body: InsertResourceDto }>) => {
-      const resource = await fastify.service.addItem(body);
-      await fastify.cache.set(`resource:${resource.id.toString()}`, resource, 10000);
-      return resource;
+      const newResource = await fastify.rpc.insertResource(body);
+      await fastify.cache.set(
+        `resource:${newResource.id.toString()}`,
+        newResource,
+        10000,
+      );
+      return newResource;
     },
   });
 
@@ -87,7 +70,8 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
     url: '/all',
     method: 'GET',
     handler: async () => {
-      const resources = await fastify.service.getAll();
+      const resources = await fastify.rpc.getAllResource();
+
       await fastify.cache.set(`resource:resources`, resources, 10000, () => {});
       return resources;
     },
@@ -108,7 +92,7 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
     handler: async ({
       query,
     }: FastifyRequest<{ Querystring: IQuerystring }>) => {
-      return fastify.service.deleteItem(query.id);
+      return fastify.rpc.deleteResource({ id: query.id });
     },
   });
 
@@ -140,7 +124,7 @@ export const resourceController: FastifyPluginAsyncJsonSchemaToTs = async (
       Body: Partial<InsertResourceDto>;
       Querystring: IQuerystring;
     }>) => {
-      return fastify.service.updateItem(query.id, body);
+      return fastify.rpc.updateResource({ ...body, id: query.id });
     },
   });
 };
